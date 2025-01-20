@@ -1,20 +1,30 @@
 import pathlib
 
-DEFAULT_PATH = pathlib.Path(__file__).parent / 'data' / 'cc-cedict.txt'
+DEFAULT_PATH = pathlib.Path(__file__).parent.parent.parent / 'data' / 'cc-cedict.txt'
 
 class CeDict:
     def __init__(self, path=None):
-        self.path = path if path is not None else DEFAULT_PATH
+        self.cc_cedict_path = path if path is not None else DEFAULT_PATH
 
         # A list of CeDictEntry objects. Should never be mutated after
         # creation.
-        self._dict = CeDict._read_dict_file(self.path)
+        self._dict = CeDict._read_dict_file(self.cc_cedict_path)
 
         # These dicts provide O(1) lookup for exact matches. The value
         # for each dict entry is an index to the `self._dict` list.
-        self.trad_to_dict = None
-        self.simp_to_dict = None
-        self.pinyin_to_dict = None
+        self._trad_to = {}
+        self._simp_to = {}
+        self._pinyin_to = {}
+
+        def add_entry(dic, ent, ind):
+            if ent in dic:
+                dic[ent].append(ind)
+            dic[ent] = [ind]
+
+        for index, entry in enumerate(self._dict):
+            add_entry(self._trad_to, entry.traditional, index)
+            add_entry(self._simp_to, entry.simplified, index)
+            add_entry(self._pinyin_to, entry.pinyin, index)
 
     @classmethod
     def _read_dict_file(cls, path):
@@ -52,8 +62,16 @@ class CeDictEntry:
     def unicode_pinyin(self):
         return self.pinyin + "now with diacritics!"
 
+
+
 if __name__ == "__main__":
     d = CeDict()
     num_entry = len(d._dict)
     num_def = sum([len(e.defs) for e in d._dict])
+    trad_uniq = len(d._trad_to)
+    simp_uniq = len(d._simp_to)
+    pinyin_uniq = len(d._pinyin_to)
     print(f"Dictionary contains {num_entry} entries and {num_def} definitions")
+    print(f"{trad_uniq} unique traditional character words")
+    print(f"{simp_uniq} unique simplified character words")
+    print(f"{pinyin_uniq} unique pinyin pronunciations")
