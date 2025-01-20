@@ -1,5 +1,7 @@
 # CePy - A sleepy little chinese english dictionary toolkit
 
+[WORK IN PROGRESS] Treat the below as "TODOS/Wishlists" for now
+
 - Parse dictionary files in the CE format into a python chinese
   english dictionary
 
