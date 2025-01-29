@@ -15,19 +15,18 @@ class CeDict:
 
         # These dicts provide O(1) lookup for exact matches. The value
         # for each dict entry is an index to the `self._dict` list.
-        self._trad_to = {}
-        self._simp_to = {}
-        self._pinyin_to = {}
-
-        def add_entry(dic, ent, ind):
-            if ent in dic:
-                dic[ent].append(ind)
-            dic[ent] = [ind]
+        _trad_to = collections.defaultdict(list)
+        _simp_to = collections.defaultdict(list)
+        _pinyin_to = collections.defaultdict(list)
 
         for index, entry in enumerate(self._dict):
-            add_entry(self._trad_to, entry.traditional, index)
-            add_entry(self._simp_to, entry.simplified, index)
-            add_entry(self._pinyin_to, entry.pinyin, index)
+            _trad_to[entry.traditional].append(index)
+            _simp_to[entry.simplified].append(index)
+            _pinyin_to[entry.pinyin].append(index)
+
+        self._trad_to = dict(_trad_to)
+        self._simp_to = dict(_simp_to)
+        self._pinyin_to = dict(_pinyin_to)
 
     @classmethod
     def _read_dict_file(cls, path):
@@ -41,6 +40,24 @@ class CeDict:
                     entries.append(CeDictEntry.from_line(line))
 
         return entries
+
+    def lookup_simplified(self, simplified):
+        index = self._simp_to.get(simplified)
+        if index is None:
+            return None
+        return [self._dict[i] for i in index]
+
+    def lookup_traditional(self, traditional):
+        index = self._trad_to.get(traditional)
+        if index is None:
+            return None
+        return [self._dict[i] for i in index]
+
+    def lookup_pinyin(self, pinyin):
+        index = self._pinyin_to.get(pinyin)
+        if index is None:
+            return None
+        return [self._dict[i] for i in index]
 
 class CeDictEntry:
     @classmethod
@@ -104,17 +121,23 @@ class Text:
                 frequency[c] += 1
         return dict(frequency)
 
-    def word_frequency(self, segmenter=None):
-        return {}
+    def word_frequency(self, segmenter):
+        frequency = collections.defaultdict(int)
+        words, non_words = segmenter(self.text)
+        for word in words:
+            frequency[word] += 1
+        return dict(frequency)
+
 
 class StudyPlan:
-    def __init__(self, text, kb, cedict):
+    def __init__(self, text, kb, cedict, segmenter):
         self.text = text
         self.kb = kb
         self.cedict = cedict
+        self.segmenter = segmenter
 
         self.character_frequency = text.character_frequency()
-        self.word_frequency = text.word_frequency()
+        self.word_frequency = text.word_frequency(self.segmenter)
 
         self.new_characters = {
             char: freq for char, freq in self.character_frequency.items()

@@ -1,4 +1,4 @@
-from cepy import cepy
+from cepy import cepy, word_segmentation as ws
 import sys
 import pprint
 
@@ -20,5 +20,11 @@ if __name__ == "__main__":
     text = cepy.Text(full_text)
     cedict = cepy.CeDict()
 
-    sp = cepy.StudyPlan(text, kb, cedict)
+    def is_word(text):
+        return cedict.lookup_simplified(text) is not None
+
+    def segmenter(text):
+        return ws.greedy(text, is_word)
+
+    sp = cepy.StudyPlan(text, kb, cedict, segmenter)
     print(str(sp))
