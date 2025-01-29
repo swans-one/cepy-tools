@@ -1,4 +1,7 @@
+import collections
 import pathlib
+import textwrap
+import unicodedata
 
 DEFAULT_PATH = pathlib.Path(__file__).parent.parent.parent / 'data' / 'cc-cedict.txt'
 
@@ -63,15 +66,98 @@ class CeDictEntry:
         return self.pinyin + "now with diacritics!"
 
 
+class KnowledgeBase:
+    """A personal knowledge base of known characters and words"""
+    def __init__(self, characters, words, delimeter="\n"):
+        """
+        characters - string of chinese characters
+        words - delimited list of words
+        delimeter - string that words is delimted by. Defaults to newline
+        """
+        self.characters = set(
+            c for c in characters
+            if unicodedata.category(c).startswith('L')
+        )
+        self.words = set(
+            words.split(delimeter)
+        )
 
-if __name__ == "__main__":
-    d = CeDict()
-    num_entry = len(d._dict)
-    num_def = sum([len(e.defs) for e in d._dict])
-    trad_uniq = len(d._trad_to)
-    simp_uniq = len(d._simp_to)
-    pinyin_uniq = len(d._pinyin_to)
-    print(f"Dictionary contains {num_entry} entries and {num_def} definitions")
-    print(f"{trad_uniq} unique traditional character words")
-    print(f"{simp_uniq} unique simplified character words")
-    print(f"{pinyin_uniq} unique pinyin pronunciations")
+    def know_char(self, char):
+        if len(char.strip()) != 1:
+            raise ValueError(f"String '{char}' is more than one character long")
+        return char.strip() in self.characters
+
+    def know_word(self, word):
+        return word.strip() in self.words or word.strip() in self.characters
+
+
+class Text:
+    """A text in predominantly chinese"""
+    def __init__(self, text):
+        self.text = text
+
+    def character_frequency(self):
+        frequency = collections.defaultdict(int)
+        for c in self.text:
+            cat = unicodedata.category(c)
+            if cat.lower().startswith('l'):
+                frequency[c] += 1
+        return dict(frequency)
+
+    def word_frequency(self, segmenter=None):
+        return {}
+
+class StudyPlan:
+    def __init__(self, text, kb, cedict):
+        self.text = text
+        self.kb = kb
+        self.cedict = cedict
+
+        self.character_frequency = text.character_frequency()
+        self.word_frequency = text.word_frequency()
+
+        self.new_characters = {
+            char: freq for char, freq in self.character_frequency.items()
+            if not kb.know_char(char)
+        }
+        self.new_words = {
+            word: freq for word, freq in self.word_frequency.items()
+            if not kb.know_word(word)
+        }
+
+    def total_characters(self):
+        return sum(self.character_frequency.values())
+
+    def unique_characters(self):
+        return len(self.character_frequency)
+
+    def total_words(self):
+        return sum(self.word_frequency.values())
+
+    def unique_words(self):
+        return len(self.word_frequency)
+
+    def __str__(self):
+        tcc = self.total_characters()
+        uc = self.unique_characters()
+        nc = len(self.new_characters)
+        pnct = nc / tcc if tcc > 0 else 0
+        pncu = nc / uc if uc > 0 else 0
+
+        twc = self.total_words()
+        uw = self.unique_words()
+        nw = len(self.new_words)
+        pnwt = nw / twc if twc > 0 else 0
+        pnwu = nw / uw if uw > 0 else 0
+        text = f"""
+        Total Character Count:           {tcc}
+        Unique Characters:               {uc}
+        New Characters:                  {nc}
+        % New Characters (total/unique): {pnct:.1%} / {pncu:.1%}
+
+        Total Word Count:                {twc}
+        Unique Words:                    {uw}
+        New Words:                       {nw}
+        % New Words (total/unique):      {pnwt:.1%} / {pnwu:.1%}
+        """
+        return textwrap.dedent(text).strip()
