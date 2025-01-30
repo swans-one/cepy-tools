@@ -68,6 +68,14 @@ class CeDictEntry:
         defs = rest.strip(" /").split("/")
         return cls(line, trad, simp, pinyin, defs)
 
+    @classmethod
+    def empty(cls, empty_text=None):
+        empty_text = (
+            empty_text if empty_text is not None
+            else "Definition Not Found"
+        )
+        return cls(f"X X [X] /{empty_text}/", "X", "X", "X", [empty_text])
+
     def __init__(self, line, trad, simp, pinyin, defs):
         self.line = line.strip()
         self.traditional = trad
@@ -148,6 +156,65 @@ class StudyPlan:
             if not kb.know_word(word)
         }
 
+    def plan(self):
+        """List the characters and words needed to understand a given
+        cumulative percentage of the text."""
+        plan = []
+
+        def pct_known(count, total):
+            return count / total if total > 0 else 0
+
+        known_char_count = sum([
+            f for c, f in self.character_frequency.items()
+            if self.kb.know_char(c)
+        ])
+        known_word_count = sum([
+            f for w, f in self.word_frequency.items()
+            if self.kb.know_word(w)
+        ])
+        total_word = self.total_words()
+        total_char = self.total_characters()
+        base_entry = PlanEntry(
+            count = 0,
+            cumulative_char = pct_known(known_char_count, total_char),
+            cumulative_word = pct_known(known_word_count, total_word),
+            text = "X",
+            text_type = "word",
+            definitions = [CeDictEntry.empty("<Current Knowledge>")],
+        )
+        plan.append(base_entry)
+
+        snd = lambda x: x[1]
+        for word, freq in sorted(self.new_words.items(), key=snd, reverse=True):
+            for char in [c for c in word if not self.kb.know_char(c)]:
+                known_char_count += self.character_frequency[char]
+                plan.append(PlanEntry(
+                    count = self.character_frequency[char],
+                    cumulative_char = pct_known(known_char_count, total_char),
+                    cumulative_word = pct_known(known_word_count, total_word),
+                    text = char,
+                    text_type = "char",
+                    definitions = (
+                        self.cedict.lookup_simplified(char)
+                        or self.cedict.lookup_traditional(char)
+                        or [CeDictEntry.empty()]
+                    )
+                ))
+            known_word_count += freq
+            plan.append(PlanEntry(
+                count = freq,
+                cumulative_char = pct_known(known_char_count, total_char),
+                cumulative_word = pct_known(known_word_count, total_word),
+                text = word,
+                text_type = "word",
+                definitions = (
+                    self.cedict.lookup_simplified(word)
+                    or self.cedict.lookup_traditional(word)
+                    or [CeDictEntry.empty()]
+                )
+            ))
+        return plan
+
     def total_characters(self):
         return sum(self.character_frequency.values())
 
@@ -160,27 +227,66 @@ class StudyPlan:
     def unique_words(self):
         return len(self.word_frequency)
 
+    def stats(self):
+        stats = {}
+        stats["total_char"] = self.total_characters()
+        stats["unique_char"] = self.unique_characters()
+        stats["new_unique_char"] = len(self.new_characters)
+        stats["new_total_char"] = sum(self.new_characters.values())
+        stats["pct_new_char_total"] = (
+            stats["new_total_char"] / stats["total_char"]
+            if stats["total_char"] > 0 else 0
+        )
+        stats["pct_new_char_unique"] = (
+            stats["new_unique_char"] / stats["unique_char"]
+            if stats["unique_char"] > 0 else 0
+        )
+        stats["total_word"] = self.total_words()
+        stats["unique_word"] = self.unique_words()
+        stats["new_unique_word"] = len(self.new_words)
+        stats["new_total_word"] = sum(self.new_words.values())
+        stats["pct_new_word_total"] = (
+            stats["new_total_word"] / stats["total_word"]
+            if stats["total_word"] > 0 else 0
+        )
+        stats["pct_new_word_unique"] = (
+            stats["new_unique_word"] / stats["unique_word"]
+            if stats["unique_word"] > 0 else 0
+        )
+        return stats
+
     def __str__(self):
-        tcc = self.total_characters()
-        uc = self.unique_characters()
-        nc = len(self.new_characters)
-        pnct = nc / tcc if tcc > 0 else 0
-        pncu = nc / uc if uc > 0 else 0
+        text = """
+        Total Character Count:           {total_char}
+        Unique Characters:               {unique_char}
+        New Characters:                  {new_unique_char}
+        % New Characters (total/unique): {pct_new_char_total:.1%} / {pct_new_char_unique:.1%}
 
-        twc = self.total_words()
-        uw = self.unique_words()
-        nw = len(self.new_words)
-        pnwt = nw / twc if twc > 0 else 0
-        pnwu = nw / uw if uw > 0 else 0
-        text = f"""
-        Total Character Count:           {tcc}
-        Unique Characters:               {uc}
-        New Characters:                  {nc}
-        % New Characters (total/unique): {pnct:.1%} / {pncu:.1%}
-
-        Total Word Count:                {twc}
-        Unique Words:                    {uw}
-        New Words:                       {nw}
-        % New Words (total/unique):      {pnwt:.1%} / {pnwu:.1%}
-        """
+        Total Word Count:                {total_word}
+        Unique Words:                    {unique_word}
+        New Words:                       {new_unique_word}
+        % New Words (total/unique):      {pct_new_word_total:.1%} / {pct_new_word_unique:.1%}
+        """.format(**self.stats())
         return textwrap.dedent(text).strip()
+
+
+class PlanEntry:
+    def __init__(self, count, cumulative_char, cumulative_word, text, text_type, definitions):
+        self.count = count
+        self.cumulative_char = cumulative_char
+        self.cumulative_word = cumulative_word
+        self.text = text
+        self.text_type = text_type
+        self.pinyin = ";".join(d.pinyin for d in definitions)
+        self.definition = "] ;; [".join(" / ".join(d.defs) for d in definitions)
+
+    def __str__(self):
+        return "[w: {cw:.0%} / c:{cc:.0%}] <{n}> {txt}{tt} ({pin}) :: [{dfn}]".format(
+            n = self.count,
+            cw = self.cumulative_word,
+            cc = self.cumulative_char,
+            txt = self.text,
+            tt = "*" if self.text_type == "char" else "",
+            pin = self.pinyin,
+            dfn = self.definition,
+        )

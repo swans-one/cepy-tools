@@ -28,3 +28,8 @@ if __name__ == "__main__":
 
     sp = cepy.StudyPlan(text, kb, cedict, segmenter)
     print(str(sp))
+    print()
+
+    plan = sp.plan()
+    for entry in plan:
+        print(str(entry))
