@@ -33,3 +33,4 @@ if __name__ == "__main__":
     plan = sp.plan()
     for entry in plan:
         print(str(entry))
+        # print(entry.serialize())

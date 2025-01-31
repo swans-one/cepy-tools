@@ -3,6 +3,8 @@ import pathlib
 import textwrap
 import unicodedata
 
+import cepy.serialize as cepy_serial
+
 DEFAULT_PATH = pathlib.Path(__file__).parent.parent.parent / 'data' / 'cc-cedict.txt'
 
 class CeDict:
@@ -85,6 +87,12 @@ class CeDictEntry:
 
     def __repr__(self):
         return f"CeDictEntry.from_line('{self.line}')"
+
+    @cepy_serial.class_serializer(
+        "line", "traditional", "simplified", "pinyin", "defs"
+    )
+    def serialize(self):
+        return {}
 
     @property
     def unicode_pinyin(self):
@@ -314,7 +322,11 @@ class PlanEntry:
         ])
         return f"{header}{defs}"
 
-
+    @cepy_serial.class_serializer(
+        "count", "cumulative_char", "cumulative_word", "text", "text_type"
+    )
+    def serialize(self):
+        return { "definitions": [d.serialize() for d in self.definitions] }
 
     def __str__(self):
         if len(self.definitions) == 1:
