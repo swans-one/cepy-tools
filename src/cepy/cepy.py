@@ -65,7 +65,7 @@ class CeDictEntry:
         (trad, _sep, rest) = line.partition(" ")
         (simp, _sep, rest) = rest.partition(" [")
         (pinyin, _sep, rest) = rest.partition("] ")
-        defs = rest.strip(" /").split("/")
+        defs = [d.strip() for d in rest.strip(" /\n\t").split("/")]
         return cls(line, trad, simp, pinyin, defs)
 
     @classmethod
@@ -160,6 +160,7 @@ class StudyPlan:
         """List the characters and words needed to understand a given
         cumulative percentage of the text."""
         plan = []
+        newly_learned_characters = set()
 
         def pct_known(count, total):
             return count / total if total > 0 else 0
@@ -186,8 +187,13 @@ class StudyPlan:
 
         snd = lambda x: x[1]
         for word, freq in sorted(self.new_words.items(), key=snd, reverse=True):
-            for char in [c for c in word if not self.kb.know_char(c)]:
+            unknown_word_characters = [
+                c for c in word
+                if not self.kb.know_char(c) and c not in newly_learned_characters
+            ]
+            for char in unknown_word_characters:
                 known_char_count += self.character_frequency[char]
+                newly_learned_characters.add(char)
                 plan.append(PlanEntry(
                     count = self.character_frequency[char],
                     cumulative_char = pct_known(known_char_count, total_char),
@@ -277,16 +283,41 @@ class PlanEntry:
         self.cumulative_word = cumulative_word
         self.text = text
         self.text_type = text_type
-        self.pinyin = ";".join(d.pinyin for d in definitions)
-        self.definition = "] ;; [".join(" / ".join(d.defs) for d in definitions)
+        self.definitions = definitions
 
-    def __str__(self):
+    def fmt_one_line(self):
+        all_pinyin = ";".join(d.pinyin for d in self.definitions)
+        all_definitions = "] ;; [".join(" / ".join(d.defs) for d in self.definitions)
         return "[w: {cw:.0%} / c:{cc:.0%}] <{n}> {txt}{tt} ({pin}) :: [{dfn}]".format(
-            n = self.count,
             cw = self.cumulative_word,
             cc = self.cumulative_char,
+            n = self.count,
             txt = self.text,
             tt = "*" if self.text_type == "char" else "",
-            pin = self.pinyin,
-            dfn = self.definition,
+            pin = all_pinyin,
+            dfn = all_definitions,
         )
+
+    def fmt_multi_line(self):
+        all_pinyin = ";".join(d.pinyin for d in self.definitions)
+        header = "[w: {cw:.0%} / c:{cc:.0%}] <{n}> {txt}{tt} ({pin}) ::\n".format(
+            cw = self.cumulative_word,
+            cc = self.cumulative_char,
+            n = self.count,
+            txt = self.text,
+            tt = "*" if self.text_type == "char" else "",
+            pin = all_pinyin,
+        )
+        defs = "\n".join([
+            "    -- ({pin}) :: {dfn}".format(pin=d.pinyin, dfn=" / ".join(d.defs))
+            for d in self.definitions
+        ])
+        return f"{header}{defs}"
+
+
+
+    def __str__(self):
+        if len(self.definitions) == 1:
+            return self.fmt_one_line()
+        else:
+            return self.fmt_multi_line()
