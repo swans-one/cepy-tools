@@ -1,4 +1,4 @@
-import cepy.pinyin as pin
+import cepy_tools.pinyin as pin
 
 def test_normalize_pinyin():
     tests = {

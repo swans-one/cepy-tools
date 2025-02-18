@@ -1,5 +1,5 @@
 [project]
-name = "cepy"
+name = "cepy-tools"
 version = "0.1.0"
 description = "A sleepy little collection of chinese<->english tools"
 readme = "README.md"

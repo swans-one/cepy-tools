@@ -1,4 +1,4 @@
-import cepy.serialize as serialize
+import cepy_tools.serialize as serialize
 
 def test_class_serializer():
     class EasyHard:

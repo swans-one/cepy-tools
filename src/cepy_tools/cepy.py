@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 import unicodedata
 
-import cepy.serialize as cepy_serial
+import cepy_tools.serialize as cepy_serial
 
 DEFAULT_PATH = pathlib.Path(__file__).parent.parent.parent / 'data' / 'cc-cedict.txt'
 

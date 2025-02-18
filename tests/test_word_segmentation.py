@@ -1,4 +1,4 @@
-from cepy import word_segmentation as ws
+from cepy_tools import word_segmentation as ws
 
 def word_sample_func(text):
     words = [
