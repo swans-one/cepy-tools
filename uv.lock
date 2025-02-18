@@ -6,11 +6,28 @@ name = "cepy"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cepy-dict" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "pytest" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pytest", specifier = ">=8.3.4" }]
+requires-dist = [{ name = "cepy-dict", specifier = ">=2025.2.18" }]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3.4" }]
+
+[[package]]
+name = "cepy-dict"
+version = "2025.2.18"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/d3/504d319ce6710b280d45b7a2d1ed72291f4a8c97cd6a6176e07abdaac9d6/cepy_dict-2025.2.18.tar.gz", hash = "sha256:64c14558f4ede37eb2da3ef396b5b2e169a502fab787883b3784823c2b030b1f", size = 3894925 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/1a/5415a9e60158c659a00809d488a805fd6bef3dda26dc45852558b10ea15d/cepy_dict-2025.2.18-py3-none-any.whl", hash = "sha256:a12223161e2b61f04392be54a8259984bc8b74d91ebbb01160e88c172da5ce65", size = 3892908 },
+]
 
 [[package]]
 name = "colorama"
