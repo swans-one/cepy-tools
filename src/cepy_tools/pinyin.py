@@ -4,6 +4,9 @@ import pathlib
 PINYIN_TABLE_CSV = pathlib.Path(__file__).parent.parent.parent / "data" / "pinyin-table.csv"
 PINYIN_EXCEPTIONS_TXT = pathlib.Path(__file__).parent.parent.parent / "data" / "pinyin-exceptions.txt"
 
+
+# TODO: This shouldn't happen on import. Write a script to generate
+# this output.
 pinyin_table = []
 with open(PINYIN_TABLE_CSV) as csvfile:
     reader = csv.DictReader(csvfile)
