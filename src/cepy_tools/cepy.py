@@ -1,3 +1,4 @@
+import cepy_dict
 import collections
 import pathlib
 import textwrap
@@ -55,6 +56,7 @@ class CeDict:
             return None
         return [self._dict[i] for i in index]
 
+    # TODO: pinyin normilization
     def lookup_pinyin(self, pinyin):
         index = self._pinyin_to.get(pinyin)
         if index is None:
@@ -96,6 +98,7 @@ class CeDictEntry:
 
     @property
     def unicode_pinyin(self):
+        # TODO implement this
         return self.pinyin + "now with diacritics!"
 
 
@@ -111,6 +114,7 @@ class KnowledgeBase:
             c for c in characters
             if unicodedata.category(c).startswith('L')
         )
+        # TODO: should this just take an array rather than do the split for you?
         self.words = set(
             words.split(delimeter)
         )
@@ -129,6 +133,12 @@ class Text:
     def __init__(self, text):
         self.text = text
 
+    def __repr__(self):
+        if len(self.text) > 40:
+            return 'Text("{short}...")'.format(short=self.text[0:40])
+        else:
+            return f'Text("{self.text}")'
+
     def character_frequency(self):
         frequency = collections.defaultdict(int)
         for c in self.text:
@@ -140,6 +150,7 @@ class Text:
     def word_frequency(self, segmenter):
         frequency = collections.defaultdict(int)
         words, non_words = segmenter(self.text)
+        print(words, non_words)
         for word in words:
             frequency[word] += 1
         return dict(frequency)
@@ -149,7 +160,7 @@ class StudyPlan:
     def __init__(self, text, kb, cedict, segmenter):
         self.text = text
         self.kb = kb
-        self.cedict = cedict
+        self.cedict = cedictPlanEntry
         self.segmenter = segmenter
 
         self.character_frequency = text.character_frequency()
@@ -327,6 +338,9 @@ class PlanEntry:
     )
     def serialize(self):
         return { "definitions": [d.serialize() for d in self.definitions] }
+
+    def __repr__(self):
+        return f"<PlanEntry - {self.text} - [{self.count}]>"
 
     def __str__(self):
         if len(self.definitions) == 1:
