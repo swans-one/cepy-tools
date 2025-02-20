@@ -6,11 +6,9 @@ import unicodedata
 
 import cepy_tools.serialize as cepy_serial
 
-DEFAULT_PATH = pathlib.Path(__file__).parent.parent.parent / 'data' / 'cc-cedict.txt'
-
 class CeDict:
     def __init__(self, path=None):
-        self.cc_cedict_path = path if path is not None else DEFAULT_PATH
+        self.cc_cedict_path = path
 
         # A list of CeDictEntry objects. Should never be mutated after
         # creation.
@@ -33,16 +31,8 @@ class CeDict:
 
     @classmethod
     def _read_dict_file(cls, path):
-        entries = []
-
-        with open(path) as f:
-            for line in f.readlines():
-                if line.startswith("#") or line.strip() == "":
-                    continue
-                else:
-                    entries.append(CeDictEntry.from_line(line))
-
-        return entries
+        raw_entries = cepy_dict.entries()
+        return [CeDictEntry(*e) for e in raw_entries]
 
     def lookup_simplified(self, simplified):
         index = self._simp_to.get(simplified)
@@ -160,7 +150,7 @@ class StudyPlan:
     def __init__(self, text, kb, cedict, segmenter):
         self.text = text
         self.kb = kb
-        self.cedict = cedictPlanEntry
+        self.cedict = cedict
         self.segmenter = segmenter
 
         self.character_frequency = text.character_frequency()

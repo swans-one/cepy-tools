@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "cepy-dict>=2025.2.18",
+    "cepy-dict>=2025.2.20",
 ]
 
 [build-system]

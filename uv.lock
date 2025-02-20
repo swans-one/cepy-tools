@@ -3,11 +3,11 @@ requires-python = ">=3.10"
 
 [[package]]
 name = "cepy-dict"
-version = "2025.2.18"
+version = "2025.2.20"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/99/d3/504d319ce6710b280d45b7a2d1ed72291f4a8c97cd6a6176e07abdaac9d6/cepy_dict-2025.2.18.tar.gz", hash = "sha256:64c14558f4ede37eb2da3ef396b5b2e169a502fab787883b3784823c2b030b1f", size = 3894925 }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/c9/28d815b07940ca11e14f12d3884972fbd818face4c679c8f33f2c9d6af93/cepy_dict-2025.2.20.tar.gz", hash = "sha256:0723798728845ec695fa3f592ad98c3bc0b2bc803ba98c019518d49955a14148", size = 3896108 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/1a/5415a9e60158c659a00809d488a805fd6bef3dda26dc45852558b10ea15d/cepy_dict-2025.2.18-py3-none-any.whl", hash = "sha256:a12223161e2b61f04392be54a8259984bc8b74d91ebbb01160e88c172da5ce65", size = 3892908 },
+    { url = "https://files.pythonhosted.org/packages/11/d8/6ec6cebb2ae78edb6481a8f9e85a7d27f3c2373c8d0ad0297168d7e2d4f5/cepy_dict-2025.2.20-py3-none-any.whl", hash = "sha256:4ed784b2935f0e5e505197b35a8a2a60ef991e7a8bf4d6da6af68f136a79ae3a", size = 3894046 },
 ]
 
 [[package]]
@@ -24,7 +24,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "cepy-dict", specifier = ">=2025.2.18" }]
+requires-dist = [{ name = "cepy-dict", specifier = ">=2025.2.20" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.3.4" }]
