@@ -28,6 +28,7 @@ def test_normalize_pinyin():
         "xian": "xian5",
         "xīān": "xi1 an1",
         "xīan": "xian1",
+        "là de cài.": "la4 de5 cai4"
     }
     for input_pinyin, expected in tests.items():
         assert pin.normalize_pinyin(input_pinyin) == expected

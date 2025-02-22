@@ -177,7 +177,8 @@ def segment_pinyin(pinyin):
     output = []
     while remaining_text:
         component, remaining_text = pop_pinyin(remaining_text)
-        output.append(component)
+        if component != "":
+            output.append(component)
     return output
 
 def pop_pinyin(text):
